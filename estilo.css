@@ -1,0 +1,155 @@
+ body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  height: 100vh;
+  background: #ffffd5;
+}
+
+ style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      background: #f9f9f9;
+    }
+
+
+    .sidebar {
+      background: #ADD8E6;
+      width: 40%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .card {
+      background: #0056b3;
+      width: 250px;
+      text-align: center;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+
+    .card img {
+  background: #0056b3;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  margin-top: 30px;
+  object-fit: cover;
+}
+
+    .card h2 {
+      margin: 10px 0 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .card p {
+      margin: 5px 0 20px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .main {
+      width: 60%;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    .about {
+      position: absolute;
+      top: 20px;
+      right: 40px;
+      color: #0b1c3f;
+    }
+
+    .main h1 {
+      font-size: 60px;
+      margin: 0;
+    }
+
+    .main h3 {
+      margin: 10px 0 30px;
+      font-weight: normal;
+      font-size: 22px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .buttons button {
+      padding: 10px 20px;
+      border-radius: 20px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .projetos {
+      background: #0056b3;
+      color: white;
+      border: 10px solid black;
+    }
+
+   .redes {
+  margin-top: 40px;
+}
+
+.redes h2 {
+  color: black;
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.redes p {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.social-buttons {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 16px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  color: white;
+  background-color: #007bff;
+  transition:  0.3s ease;
+}
+
+.btn:hover {
+  background-color: #0056b3;
+}
+
+.btn i {
+  font-size: 18px;
+}
+
+footer {
+    text-align: absolute;
+    padding: 10px;
+    font-size: 0.9em;
+    color: #777;
+}
+
+.fa-code, .fa-user, .fa-heart, .fa-laptop-code {
+    margin-right: 8px;
+}
