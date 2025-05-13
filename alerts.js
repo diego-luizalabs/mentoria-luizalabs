@@ -1,1 +1,0 @@
-alert("2025 Diego Santos - Projeto Luizalabs");
