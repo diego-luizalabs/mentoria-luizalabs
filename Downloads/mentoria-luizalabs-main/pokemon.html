@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projeto Pikachu - PokeAPI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.15);
+            text-align: center;
+            width: 100%;
+            max-width: 400px; 
+        }
+
+        h1 {
+            color: #e3350d; 
+            margin-bottom: 25px;
+        }
+
+        #botaoPikachu {
+            background-color: #ffcb05; 
+            color: #333;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 25px;
+            transition: background-color 0.3s;
+        }
+
+        #botaoPikachu:hover {
+            background-color: #e6b800;
+        }
+
+        #pikachu-info {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        #pikachu-info h2 {
+            margin-top: 0;
+            text-transform: capitalize;
+            color: #3b4cca;
+        }
+
+        #pikachu-imagem {
+            max-width: 180px;
+            height: auto;
+            min-height: 120px;
+            margin-bottom: 15px;
+            background-color: #eee; 
+            border-radius: 5px;
+        }
+
+        #pikachu-info p {
+            font-size: 1em;
+            line-height: 1.5;
+            margin: 8px 0;
+            text-align: left;
+        }
+
+        #pikachu-info p strong {
+            color: #555;
+        }
+
+        .link-voltar {
+            margin-top: 30px;
+            display: inline-block;
+            text-decoration: none;
+            background-color: #777;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .link-voltar:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Pokédex do Pikachu</h1>
+        <button id="botaoPikachu">Mostrar Outra Variação!</button>
+
+        <div id="pikachu-info">
+            <h2 id="pikachu-nome">Carregando...</h2>
+            <img id="pikachu-imagem" src="" alt="Imagem do Pikachu">
+            <p><strong>Altura:</strong> <span id="pikachu-altura">...</span></p>
+            <p><strong>Peso:</strong> <span id="pikachu-peso">...</span></p>
+            <p><strong>Habilidade:</strong> <span id="pikachu-habilidade">...</span></p>
+        </div>
+        
+        <a href="index.html" class="link-voltar">Voltar ao Portfólio</a>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const botaoPikachu = document.getElementById('botaoPikachu');
+    const pikachuNome = document.getElementById('pikachu-nome');
+    const pikachuImagem = document.getElementById('pikachu-imagem');
+    const pikachuAltura = document.getElementById('pikachu-altura');
+    const pikachuPeso = document.getElementById('pikachu-peso');
+    const pikachuHabilidade = document.getElementById('pikachu-habilidade');
+
+    const pikachuVariationsIds = [
+        25, 10090, 10091, 10092, 10093, 10094, 10155, 10156, 
+        10157, 10158, 10159, 10160, 10161, 10195
+    ];
+    let indiceAtual = 0;
+
+    async function buscarPikachu(id) {
+        pikachuNome.textContent = "Carregando...";
+        pikachuImagem.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; 
+        pikachuImagem.alt = "Carregando...";
+        pikachuAltura.textContent = "...";
+        pikachuPeso.textContent = "...";
+        pikachuHabilidade.textContent = "...";
+
+        try {
+            const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}/`);
+            if (!response.ok) {
+                throw new Error(`Pokémon ID ${id} não encontrado (Status: ${response.status})`);
+            }
+            const data = await response.json();
+            mostrarPikachu(data);
+        } catch (error) {
+            console.error("Erro ao buscar Pikachu:", error);
+            pikachuNome.textContent = "Erro ao carregar";
+            pikachuImagem.alt = "Falha ao carregar";
+            
+        }
+    }
+
+    function mostrarPikachu(data) {
+        pikachuNome.textContent = data.name.charAt(0).toUpperCase() + data.name.slice(1).replace(/-/g, ' ');
+        pikachuImagem.src = data.sprites.other?.['official-artwork']?.front_default || 
+                            data.sprites.front_default || 
+                            '';
+        pikachuImagem.alt = `Imagem de ${data.name}`;
+        pikachuAltura.textContent = data.height ? `${data.height / 10} m` : "N/A";
+        pikachuPeso.textContent = data.weight ? `${data.weight / 10} kg` : "N/A";
+
+        if (data.abilities && data.abilities.length > 0) {
+            let ability = data.abilities.find(a => !a.is_hidden);
+            if (!ability) ability = data.abilities[0]; 
+            pikachuHabilidade.textContent = ability ? ability.ability.name.replace(/-/g, ' ') : "Nenhuma";
+        } else {
+            pikachuHabilidade.textContent = "Nenhuma";
+        }
+    }
+
+    if (botaoPikachu) {
+        botaoPikachu.addEventListener('click', () => {
+            indiceAtual = (indiceAtual + 1) % pikachuVariationsIds.length;
+            buscarPikachu(pikachuVariationsIds[indiceAtual]);
+        });
+
+        
+        if (pikachuVariationsIds.length > 0) {
+            buscarPikachu(pikachuVariationsIds[indiceAtual]);
+        }
+    }
+});
+</script>
+
+</body>
+</html>
