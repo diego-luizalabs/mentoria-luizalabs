@@ -19,24 +19,27 @@
         }
 
         .slideshow-container {
-            position: relative;
+            position: relative; 
             max-width: 400px;
+            min-height: 300px; 
             margin: auto;
             border: 3px solid #ddd;
             border-radius: 8px;
-            overflow: hidden; /* Para esconder slides fora da área visível */
+            overflow: hidden; 
             background-color: #fff;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: flex; 
+            justify-content: center;
+            align-items: center;
         }
 
-        .slide {
-            display: none; /* Esconder todos os slides por padrão */
+        .slide-content { 
             padding: 20px;
             text-align: center;
         }
 
-        .slide img {
-            max-width: 200px;
+        .slide-content img {
+            max-width: 200px; 
             height: auto;
             display: block;
             margin: 0 auto 15px;
@@ -44,38 +47,41 @@
             border-radius: 4px;
         }
 
-        .slide h3 {
+        .slide-content h3 {
             margin: 10px 0;
             color: #555;
         }
 
-        /* Botões de Próximo e Anterior */
         .prev, .next {
             cursor: pointer;
             position: absolute;
             top: 50%;
-            width: auto;
+            transform: translateY(-50%); 
+            width: auto; 
             padding: 16px;
-            margin-top: -30px; /* Ajustar para centralizar verticalmente */
             color: white;
             font-weight: bold;
             font-size: 20px;
             transition: 0.6s ease;
-            border-radius: 0 3px 3px 0;
             user-select: none;
             background-color: rgba(0,0,0,0.5);
+            z-index: 10; 
+        }
+
+        .prev {
+            left: 0; 
+            border-radius: 0 5px 5px 0;
         }
 
         .next {
             right: 0;
-            border-radius: 3px 0 0 3px;
+            border-radius: 5px 0 0 5px; 
         }
 
         .prev:hover, .next:hover {
             background-color: rgba(0,0,0,0.8);
         }
 
-        /* Pontos de navegação */
         .dots-container {
             text-align: center;
             padding: 10px 0;
@@ -96,42 +102,46 @@
             background-color: #717171;
         }
 
-        #loading-message {
+        #loading-message-react, #error-message-react {
             font-size: 1.2em;
             color: #333;
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        #error-message-react {
+            color: #D8000C;
+            background-color: #FFD2D2;
+            border-color: #D8000C;
         }
     </style>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
 
-    <h1>Pikachu: Evoluções e Variações</h1>
+    <h1>Pikachu - Evoluções e Variações</h1>
 
-    <div id="loading-message">Carregando dados do Pokémon...</div>
+    <div id="root"></div>
 
-    <div class="slideshow-container">
-        </div>
-    <div class="dots-container">
-        </div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-    <script>
         const initialUrl = "https://pokeapi.co/api/v2/pokemon-species/pikachu";
-        const slideshowContainer = document.querySelector('.slideshow-container');
-        const dotsContainer = document.querySelector('.dots-container');
-        const loadingMessage = document.getElementById('loading-message');
-        let slideIndex = 0;
-        let slidesData = []; // Para armazenar os dados dos Pokémon para o slide
 
         async function fetchData(url) {
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status}`);
+                    throw new Error(`Erro HTTP: ${response.status} em ${url}`);
                 }
                 return await response.json();
             } catch (error) {
-                console.error("Falha ao buscar dados:", error);
-                loadingMessage.textContent = `Erro ao carregar dados: ${error.message}. Verifique o console para mais detalhes.`;
-                return null;
+                console.error("Falha ao buscar dados:", error.message);
+                throw error; 
             }
         }
 
@@ -140,7 +150,7 @@
             if (pokemonData && pokemonData.sprites) {
                 return {
                     name: pokemonData.name.charAt(0).toUpperCase() + pokemonData.name.slice(1),
-                    imageUrl: pokemonData.sprites.front_default || 'https://via.placeholder.com/150?text=No+Image' // Imagem padrão se não houver sprite
+                    imageUrl: pokemonData.sprites.front_default || 'https://via.placeholder.com/200?text=No+Image'
                 };
             }
             return null;
@@ -153,13 +163,15 @@
             if (evolutionData && evolutionData.chain) {
                 let currentEvo = evolutionData.chain;
                 do {
-                    const speciesDetails = await getPokemonDetails(`https://pokeapi.co/api/v2/pokemon/${currentEvo.species.name}`);
-                    if(speciesDetails) chain.push(speciesDetails);
+                    try {
+                        const speciesDetails = await getPokemonDetails(`https://pokeapi.co/api/v2/pokemon/${currentEvo.species.name}`);
+                        if(speciesDetails) chain.push(speciesDetails);
+                    } catch (e) {
+                        console.warn(`Não foi possível buscar detalhes para evolução ${currentEvo.species.name}: ${e.message}`)
+                    }
 
                     if (currentEvo.evolves_to.length > 0) {
-                        // Lidar com múltiplas evoluções (ex: Eevee), por simplicidade pegamos a primeira.
-                        // Para um tratamento completo, seria necessário iterar por evolves_to e suas sub-evoluções.
-                        currentEvo = currentEvo.evolves_to[0];
+                        currentEvo = currentEvo.evolves_to[0]; 
                     } else {
                         currentEvo = null;
                     }
@@ -168,134 +180,144 @@
             return chain;
         }
 
-        async function getVariations(varietiesArray) {
+        async function getVariations(varietiesArray, basePokemonName) {
             const variations = [];
             for (const variety of varietiesArray) {
-                // Apenas adiciona se não for a variedade padrão (já que Pikachu estará na cadeia de evolução)
-                // e se tiver um nome diferente de "pikachu" (para evitar duplicidade simples)
-                // Algumas "variedades" são o próprio Pokémon base.
-                if (!variety.is_default && variety.pokemon.name !== 'pikachu') {
-                     const variationDetails = await getPokemonDetails(variety.pokemon.url);
-                     if (variationDetails) {
-                        // Evitar adicionar duplicatas se já estiver na lista (algumas variações podem já ter sido capturadas como evoluções ou o base)
-                        if (!slidesData.some(s => s.name.toLowerCase() === variationDetails.name.toLowerCase())) {
-                            variations.push(variationDetails);
+                if (!variety.is_default && variety.pokemon.name !== basePokemonName) {
+                     try {
+                        const variationDetails = await getPokemonDetails(variety.pokemon.url);
+                        if (variationDetails) {
+                           variations.push(variationDetails);
                         }
-                     }
+                    } catch (e) {
+                        console.warn(`Não foi possível buscar detalhes para variação ${variety.pokemon.name}: ${e.message}`)
+                    }
                 }
             }
             return variations;
         }
 
+        function PokemonSlideshowApp() {
+            const [slidesData, setSlidesData] = useState([]);
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [isLoading, setIsLoading] = useState(true);
+            const [error, setError] = useState(null);
 
-        async function initializeSlideshow() {
-            const speciesData = await fetchData(initialUrl);
+            useEffect(() => {
+                async function initializeSlideshowData() {
+                    setIsLoading(true);
+                    setError(null);
+                    try {
+                        const speciesData = await fetchData(initialUrl);
+                        if (!speciesData) {
+                            throw new Error("Não foi possível carregar os dados iniciais da espécie Pikachu.");
+                        }
 
-            if (!speciesData) {
-                loadingMessage.textContent = "Não foi possível carregar os dados iniciais do Pikachu.";
-                return;
-            }
+                        let allPokemon = [];
 
-            // 1. Adicionar o Pikachu base (se não for pego pelas variações/evoluções de forma mais específica)
-            const pikachuBaseDetails = await getPokemonDetails(`https://pokeapi.co/api/v2/pokemon/pikachu`);
-            if (pikachuBaseDetails) {
-                slidesData.push(pikachuBaseDetails);
-            }
+                        try {
+                            const pikachuBaseDetails = await getPokemonDetails(`https://pokeapi.co/api/v2/pokemon/pikachu`);
+                            if (pikachuBaseDetails) {
+                                allPokemon.push(pikachuBaseDetails);
+                            }
+                        } catch (e) {
+                             console.warn(`Não foi possível buscar Pikachu base: ${e.message}`)
+                        }
 
+                        if (speciesData.evolution_chain && speciesData.evolution_chain.url) {
+                            const evolutions = await getEvolutionChain(speciesData.evolution_chain.url);
+                            allPokemon = allPokemon.concat(evolutions);
+                        }
 
-            // 2. Obter e adicionar evoluções
-            if (speciesData.evolution_chain && speciesData.evolution_chain.url) {
-                const evolutions = await getEvolutionChain(speciesData.evolution_chain.url);
-                evolutions.forEach(evo => {
-                    if (!slidesData.some(s => s.name.toLowerCase() === evo.name.toLowerCase())) {
-                        slidesData.push(evo);
+                        if (speciesData.varieties && speciesData.varieties.length > 0) {
+                            const variations = await getVariations(speciesData.varieties, speciesData.name);
+                            allPokemon = allPokemon.concat(variations);
+                        }
+
+                        const uniquePokemon = allPokemon.filter((pokemon, index, self) =>
+                            pokemon && pokemon.name && index === self.findIndex((p) => (
+                                p && p.name === pokemon.name
+                            ))
+                        );
+
+                        if (uniquePokemon.length === 0) {
+                            setError("Nenhuma evolução ou variação do Pokémon foi encontrada após o processamento.");
+                        } else {
+                            setSlidesData(uniquePokemon);
+                        }
+                    } catch (err) {
+                        console.error("Erro ao inicializar o slideshow:", err);
+                        setError(err.message || "Ocorreu um erro desconhecido ao buscar os dados.");
+                    } finally {
+                        setIsLoading(false);
                     }
-                });
+                }
+
+                initializeSlideshowData();
+            }, []);
+
+            const handlePrev = () => {
+                setCurrentIndex((prevIndex) => (prevIndex === 0 ? slidesData.length - 1 : prevIndex - 1));
+            };
+
+            const handleNext = () => {
+                setCurrentIndex((prevIndex) => (prevIndex === slidesData.length - 1 ? 0 : prevIndex + 1));
+            };
+
+            const handleDotClick = (index) => {
+                setCurrentIndex(index);
+            };
+
+            if (isLoading) {
+                return <div id="loading-message-react">Carregando dados do Pokémon...</div>;
             }
 
-            // 3. Obter e adicionar variações
-            if (speciesData.varieties && speciesData.varieties.length > 0) {
-                const variations = await getVariations(speciesData.varieties);
-                 variations.forEach(varia => {
-                    if (!slidesData.some(s => s.name.toLowerCase() === varia.name.toLowerCase())) {
-                        slidesData.push(varia);
-                    }
-                });
+            if (error) {
+                return <div id="error-message-react">Erro: {error}</div>;
             }
 
             if (slidesData.length === 0) {
-                loadingMessage.textContent = "Nenhuma evolução ou variação encontrada para Pikachu.";
-                return;
+                return <div id="loading-message-react">Nenhum Pokémon para exibir. Verifique se houve um erro no carregamento ou se não há dados.</div>;
             }
 
-            loadingMessage.style.display = 'none'; // Esconder mensagem de carregamento
-            createSlides();
-            createDots();
-            showSlides(slideIndex); // Mostrar o primeiro slide
+            const currentPokemon = slidesData[currentIndex];
+
+            return (
+                <React.Fragment>
+                    <div className="slideshow-container">
+                        {slidesData.length > 1 && (
+                            <a className="prev" onClick={handlePrev}>&#10094;</a>
+                        )}
+                        <div className="slide-content">
+                            {currentPokemon && currentPokemon.imageUrl ? (
+                                <img src={currentPokemon.imageUrl} alt={currentPokemon.name} />
+                            ) : (
+                                <img src="https://via.placeholder.com/200?text=Imagem+Indisponível" alt="Imagem indisponível" />
+                            )}
+                            <h3>{currentPokemon ? currentPokemon.name : "Carregando..."}</h3>
+                        </div>
+                        {slidesData.length > 1 && (
+                            <a className="next" onClick={handleNext}>&#10095;</a>
+                        )}
+                    </div>
+
+                    {slidesData.length > 1 && (
+                        <div className="dots-container">
+                            {slidesData.map((_, index) => (
+                                <span
+                                    key={index}
+                                    className={`dot ${index === currentIndex ? 'active' : ''}`}
+                                    onClick={() => handleDotClick(index)}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </React.Fragment>
+            );
         }
 
-        function createSlides() {
-            slidesData.forEach((pokemon, index) => {
-                const slideDiv = document.createElement('div');
-                slideDiv.classList.add('slide');
-                slideDiv.innerHTML = `
-                    <img src="${pokemon.imageUrl}" alt="${pokemon.name}">
-                    <h3>${pokemon.name}</h3>
-                `;
-                slideshowContainer.appendChild(slideDiv);
-            });
-
-            // Adicionar botões de navegação se houver mais de um slide
-            if (slidesData.length > 1) {
-                const prevButton = document.createElement('a');
-                prevButton.classList.add('prev');
-                prevButton.innerHTML = '&#10094;';
-                prevButton.onclick = () => plusSlides(-1);
-                slideshowContainer.appendChild(prevButton);
-
-                const nextButton = document.createElement('a');
-                nextButton.classList.add('next');
-                nextButton.innerHTML = '&#10095;';
-                nextButton.onclick = () => plusSlides(1);
-                slideshowContainer.appendChild(nextButton);
-            }
-        }
-
-        function createDots() {
-            if (slidesData.length > 1) {
-                slidesData.forEach((_, index) => {
-                    const dotSpan = document.createElement('span');
-                    dotSpan.classList.add('dot');
-                    dotSpan.onclick = () => currentSlide(index);
-                    dotsContainer.appendChild(dotSpan);
-                });
-            }
-        }
-
-        function plusSlides(n) {
-            showSlides(slideIndex += n);
-        }
-
-        function currentSlide(n) {
-            showSlides(slideIndex = n);
-        }
-
-        function showSlides(n) {
-            const slides = document.querySelectorAll('.slide');
-            const dots = document.querySelectorAll('.dot');
-
-            if (n >= slides.length) {slideIndex = 0}
-            if (n < 0) {slideIndex = slides.length - 1}
-
-            slides.forEach(slide => slide.style.display = "none");
-            dots.forEach(dot => dot.classList.remove("active"));
-
-            if (slides[slideIndex]) slides[slideIndex].style.display = "block";
-            if (dots[slideIndex]) dots[slideIndex].classList.add("active");
-        }
-
-        // Iniciar o slideshow
-        initializeSlideshow();
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<PokemonSlideshowApp />);
 
     </script>
 
